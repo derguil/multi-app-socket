@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Socket Test Console</title>
+    <style>
+      :root {
+        --bg: #f3efe4;
+        --panel: #fff9ec;
+        --ink: #1f1c16;
+        --sub: #5d5648;
+        --line: #d8cdb5;
+        --accent: #0f766e;
+        --accent-2: #b45309;
+        --danger: #b91c1c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", "Noto Sans KR", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 0%, #fdf4d9 0%, transparent 40%),
+          radial-gradient(circle at 90% 100%, #d1fae5 0%, transparent 35%),
+          var(--bg);
+      }
+
+      .wrap {
+        max-width: 960px;
+        margin: 24px auto;
+        padding: 20px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--panel);
+        box-shadow: 0 14px 40px rgba(31, 28, 22, 0.08);
+        overflow: hidden;
+      }
+
+      .head {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(140deg, #fff7db, #e7f8ef);
+      }
+
+      .head h1 {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 0.01em;
+      }
+
+      .head p {
+        margin: 6px 0 0;
+        color: var(--sub);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      @media (min-width: 860px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .section {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px;
+        background: #fffef8;
+      }
+
+      .section h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--sub);
+        margin: 8px 0 6px;
+      }
+
+      input {
+        width: 100%;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        padding: 0 12px;
+        font-size: 14px;
+        background: #fff;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.12s ease, opacity 0.12s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .ok {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .warn {
+        background: var(--accent-2);
+        color: #fff;
+      }
+
+      .danger {
+        background: var(--danger);
+        color: #fff;
+      }
+
+      .ghost {
+        background: #ece6d5;
+        color: #3d372e;
+      }
+
+      .status {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--sub);
+      }
+
+      #log {
+        margin-top: 12px;
+        height: 300px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: #1f2937;
+        color: #f3f4f6;
+        padding: 10px;
+        overflow: auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .log-line {
+        margin: 0;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <header class="head">
+          <h1>Socket Test Console</h1>
+          <p>namespace: /chat | events: joinChatRoom, leaveChatRoom, chat:send, chat:send:room</p>
+        </header>
+
+        <div class="grid">
+          <section class="section">
+            <h2>Connection</h2>
+            <label for="serverUrl">Server URL</label>
+            <input id="serverUrl" value="http://localhost:3000/chat" />
+
+            <div class="row">
+              <button class="ok" id="btnConnect">Connect</button>
+              <button class="danger" id="btnDisconnect">Disconnect</button>
+              <button class="ghost" id="btnClear">Clear Logs</button>
+            </div>
+
+            <p class="status" id="status">disconnected</p>
+          </section>
+
+          <section class="section">
+            <h2>Room</h2>
+            <label for="roomId">Room ID</label>
+            <input id="roomId" value="room-1" />
+
+            <div class="row">
+              <button class="ok" id="btnJoin">Join Room</button>
+              <button class="warn" id="btnLeave">Leave Room</button>
+            </div>
+
+            <label for="roomMessage">Room Message</label>
+            <input id="roomMessage" value="hello room" />
+
+            <div class="row">
+              <button class="ok" id="btnSendRoom">Send To Room</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="grid" style="padding-top: 0">
+          <section class="section">
+            <h2>Global Broadcast</h2>
+            <label for="globalMessage">Message</label>
+            <input id="globalMessage" value="hello everyone" />
+
+            <div class="row">
+              <button class="ok" id="btnSendGlobal">Send Global</button>
+            </div>
+
+            <pre id="log"></pre>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+      const state = {
+        socket: null,
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      const logEl = $('log');
+      const statusEl = $('status');
+
+      function log(type, payload) {
+        const time = new Date().toISOString().replace('T', ' ').replace('Z', '');
+        const line = document.createElement('p');
+        line.className = 'log-line';
+        line.textContent = `[${time}] ${type} ${payload ? JSON.stringify(payload) : ''}`;
+        logEl.appendChild(line);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function setStatus() {
+        if (!state.socket) {
+          statusEl.textContent = 'disconnected';
+          return;
+        }
+        statusEl.textContent = state.socket.connected
+          ? `connected (${state.socket.id || 'pending id'})`
+          : 'connecting/disconnected';
+      }
+
+      function ensureSocket() {
+        if (!state.socket) {
+          log('error', { message: 'socket is not connected' });
+          return null;
+        }
+        return state.socket;
+      }
+
+      $('btnConnect').addEventListener('click', () => {
+        const url = $('serverUrl').value.trim();
+        if (!url) {
+          log('error', { message: 'server url is required' });
+          return;
+        }
+
+        if (state.socket?.connected) {
+          log('info', { message: 'already connected' });
+          return;
+        }
+
+        if (state.socket) {
+          state.socket.disconnect();
+          state.socket = null;
+        }
+
+        const socket = io(url, { transports: ['websocket'] });
+        state.socket = socket;
+
+        socket.on('connect', () => {
+          setStatus();
+          log('connect', { id: socket.id });
+        });
+
+        socket.on('disconnect', (reason) => {
+          setStatus();
+          log('disconnect', { reason });
+        });
+
+        socket.on('connect_error', (err) => {
+          setStatus();
+          log('connect_error', { message: err.message });
+        });
+
+        socket.on('chat:message', (data) => {
+          log('chat:message', data);
+        });
+
+        setStatus();
+      });
+
+      $('btnDisconnect').addEventListener('click', () => {
+        if (!state.socket) {
+          return;
+        }
+        state.socket.disconnect();
+        state.socket = null;
+        setStatus();
+      });
+
+      $('btnJoin').addEventListener('click', () => {
+        const socket = ensureSocket();
+        if (!socket) return;
+
+        const roomId = $('roomId').value.trim();
+        socket.emit('joinChatRoom', { roomId }, (ack) => {
+          log('joinChatRoom:ack', ack);
+        });
+      });
+
+      $('btnLeave').addEventListener('click', () => {
+        const socket = ensureSocket();
+        if (!socket) return;
+
+        const roomId = $('roomId').value.trim();
+        socket.emit('leaveChatRoom', { roomId }, (ack) => {
+          log('leaveChatRoom:ack', ack);
+        });
+      });
+
+      $('btnSendGlobal').addEventListener('click', () => {
+        const socket = ensureSocket();
+        if (!socket) return;
+
+        const message = $('globalMessage').value.trim();
+        socket.emit('chat:send', { message });
+        log('chat:send', { message });
+      });
+
+      $('btnSendRoom').addEventListener('click', () => {
+        const socket = ensureSocket();
+        if (!socket) return;
+
+        const roomId = $('roomId').value.trim();
+        const message = $('roomMessage').value.trim();
+        socket.emit('chat:send:room', { roomId, message }, (ack) => {
+          log('chat:send:room:ack', ack);
+        });
+      });
+
+      $('btnClear').addEventListener('click', () => {
+        logEl.innerHTML = '';
+      });
+
+      setStatus();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: multi-app-socket-redis
+    ports:
+      - '6379:6379'
+    restart: unless-stopped
+
+  app1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multi-app-socket-app1
+    environment:
+      PORT: 3000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - '3001:3000'
+    depends_on:
+      - redis
+
+  app2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multi-app-socket-app2
+    environment:
+      PORT: 3000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - '3002:3000'
+    depends_on:
+      - redis
+
+  app3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multi-app-socket-app3
+    environment:
+      PORT: 3000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - '3003:3000'
+    depends_on:
+      - redis
+
+  nginx:
+    image: nginx:alpine
+    container_name: multi-app-socket-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app1
+      - app2
+      - app3
+    restart: unless-stopped
